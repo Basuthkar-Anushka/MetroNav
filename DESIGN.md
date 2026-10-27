@@ -120,11 +120,11 @@ The application uses Python's `argparse` module.
 Examples of the current CLI commands are:
 
 ```bash
-python main.py info
-python main.py suggest Ame
-python main.py route Ameerpet Moosapet --mode fastest
-python main.py route Ameerpet "SR Nagar" --mode fewest-interchanges
-python main.py route Miyapur Nagole --mode cheapest
+python metronav.py info
+python metronav.py suggest Ame
+python metronav.py route Ameerpet Moosapet --mode fastest
+python metronav.py route Ameerpet "SR Nagar" --mode fewest-interchanges
+python metronav.py route Miyapur Nagole --mode cheapest
 ```
 
 Station names containing spaces should be enclosed in quotes in the terminal.

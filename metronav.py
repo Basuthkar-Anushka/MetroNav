@@ -5,6 +5,7 @@ from trie import Trie
 from graph import Graph
 from routing import Router
 from fares import FareCalculator
+from critical_stations import find_critical_stations
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -51,6 +52,11 @@ def main():
         default="fastest",
         help="Routing preference"
     )
+    # Critical stations command
+    subparsers.add_parser(
+        "critical",
+        help="Find stations whose removal disconnects the network"
+    )
 
     args = parser.parse_args()
 
@@ -68,6 +74,18 @@ def main():
                     for edges in graph.adjacency.values()
                 ) // 2
             )
+
+        elif args.command == "critical":
+            critical_stations = find_critical_stations(graph)
+
+            print("Critical Stations")
+            print("-----------------")
+
+            if critical_stations:
+                for station in critical_stations:
+                    print("-", station)
+            else:
+                print("No critical stations found.")
 
         elif args.command == "suggest":
             trie = Trie()

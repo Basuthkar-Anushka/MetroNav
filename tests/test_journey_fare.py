@@ -1,33 +1,31 @@
 
 from pathlib import Path
+
 from graph import Graph
 from routing import Router
 from fares import FareCalculator
 
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-graph = Graph.from_json(
-    PROJECT_ROOT / "data" / "network.json"
-)
 
-fare_calculator = FareCalculator.from_json(
-    PROJECT_ROOT / "data" / "fares.json"
-)
+def test_journey_fare_integration():
+    graph = Graph.from_json(
+        PROJECT_ROOT / "data" / "network.json"
+    )
 
-router = Router(graph)
+    fare_calculator = FareCalculator.from_json(
+        PROJECT_ROOT / "data" / "fares.json"
+    )
 
-result = router.shortest_time("Ameerpet", "Moosapet")
+    router = Router(graph)
 
-assert result is not None
+    result = router.shortest_time("Ameerpet", "Moosapet")
 
-distance = result["distance_km"]
-fare = fare_calculator.calculate_fare(distance)
+    assert result is not None
 
-print("Journey: Ameerpet -> Moosapet")
-print("Distance:", distance, "km")
-print("Travel time:", result["minutes"], "minutes")
-print("Fare: Rs.", fare)
+    distance = result["distance_km"]
+    fare = fare_calculator.calculate_fare(distance)
 
-assert fare == 40
-
-print("Journey fare integration test passed!")
+    assert distance > 0
+    assert fare == 40

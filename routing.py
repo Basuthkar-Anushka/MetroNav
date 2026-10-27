@@ -1,6 +1,7 @@
 
 from min_heap import MinHeap
 from cache import LRUCache
+from union_find import UnionFind
 
 
 class Router:
@@ -10,7 +11,75 @@ class Router:
         self.route_cache = LRUCache(capacity=10)
 
     def get_neighbors(self, station_id):
-        return self.graph.adjacency[station_id]
+        if station_id in self.graph.closed_stations:
+            return []
+
+        return [
+            edge
+            for edge in self.graph.adjacency[station_id]
+            if (
+                    edge["destination"] not in self.graph.closed_stations
+                    and frozenset(
+                (station_id, edge["destination"])
+            ) not in self.graph.closed_segments
+            )
+        ]
+
+    def stations_within_time(self, origin, time_limit):
+        """Return stations reachable within a time limit, in minutes."""
+        import math
+
+        if time_limit < 0:
+            raise ValueError("Time limit cannot be negative")
+
+        origin_id = self.graph.find_station(origin)
+        if origin_id is None:
+            raise ValueError(f"Unknown station: {origin}")
+
+        if origin_id in self.graph.closed_stations:
+            return {}
+
+        best_time = {origin_id: 0}
+        heap = MinHeap()
+        heap.push((0, origin_id))
+
+        while not heap.is_empty():
+            minutes, station_id = heap.pop()
+
+            if minutes != best_time.get(station_id):
+                continue
+
+            for edge in self.get_neighbors(station_id):
+                next_station = edge["destination"]
+                new_minutes = minutes + edge["minutes"]
+
+                if new_minutes > time_limit:
+                    continue
+
+                if new_minutes < best_time.get(next_station, math.inf):
+                    best_time[next_station] = new_minutes
+                    heap.push((new_minutes, next_station))
+
+        return {
+            self.graph.stations[station_id]: minutes
+            for station_id, minutes in best_time.items()
+        }
+
+    def close_station(self, station_name):
+        self.graph.close_station(station_name)
+        self.route_cache.clear()
+
+    def reopen_station(self, station_name):
+        self.graph.reopen_station(station_name)
+        self.route_cache.clear()
+
+    def close_segment(self, station_a, station_b):
+        self.graph.close_segment(station_a, station_b)
+        self.route_cache.clear()
+
+    def reopen_segment(self, station_a, station_b):
+        self.graph.reopen_segment(station_a, station_b)
+        self.route_cache.clear()
 
     def find_route(self, origin_name, destination_name, mode="fastest"):
         if mode not in ("fastest", "fewest-interchanges", "cheapest"):
@@ -277,3 +346,29 @@ class Router:
                     break
 
         return total_distance
+
+    def zones(self):
+        station_ids = [
+            station_id
+            for station_id in self.graph.stations
+            if station_id not in self.graph.closed_stations
+        ]
+
+        union_find = UnionFind(station_ids)
+
+        for station_id in station_ids:
+            for edge in self.get_neighbors(station_id):
+                destination = edge["destination"]
+
+                if destination in union_find.parent:
+                    union_find.union(station_id, destination)
+
+        groups = {}
+
+        for station_id in station_ids:
+            root = union_find.find(station_id)
+            groups.setdefault(root, []).append(
+                self.graph.stations[station_id]
+            )
+
+        return list(groups.values())
