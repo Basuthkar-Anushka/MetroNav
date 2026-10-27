@@ -8,7 +8,7 @@ The project uses data structures and algorithms to organize the network, search 
 
 ## 2. Project Structure
 
-- `main.py` — Command-line interface and application entry point.
+- `metronav.py` — Command-line interface and application entry point.
 - `graph.py` — Loads the metro network and provides station lookup.
 - `routing.py` — Calculates routes between stations.
 - `min_heap.py` — Implements a custom minimum heap for priority-based processing.
@@ -179,17 +179,19 @@ The following requirements must not be considered complete until they have been 
 
 ## 13. Complexity Summary
 
-| Operation | Time complexity |
-|---|---|
-| Graph construction | O(V + E) |
-| Station lookup | O(1) average |
-| Trie prefix traversal | O(P) |
-| Sorting R suggestions | O(R log R) |
-| Heap insertion | O(log N) |
-| Heap removal | O(log N) |
-| LRU cache get/put | O(1) average |
-| Fare slab lookup | O(S) |
+
+| Operation              | Time complexity                                                  |
+|------------------------|------------------------------------------------------------------|
+| Graph construction     | O(V + E)                                                         |
+| Station lookup         | O(1) average                                                     |
+| Trie prefix traversal  | O(P)                                                             |
+| Sorting R suggestions  | O(R log R)                                                       |
+| Heap insertion         | O(log N)                                                         |
+| Heap removal           | O(log N)                                                         |
+| LRU cache get/put      | O(1) average                                                     |
+| Fare slab lookup       | O(S)                                                             |
 | Dijkstra-style routing | Typically O((V + E) log V), adjusted for station-and-line states |
+
 
 V is the number of stations, E is the number of connections, P is the prefix length, R is the number of suggestions, N is the heap or cache size, and S is the number of fare slabs.
 
