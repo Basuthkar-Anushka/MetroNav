@@ -3,3 +3,6 @@ __pycache__/
 .idea/
 .venv/
 venv/
+# Runtime state files
+data/network_state.json
+data/recent_routes.json

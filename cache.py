@@ -73,3 +73,15 @@ class LRUCache:
         self.cache.clear()
         self.head.next = self.tail
         self.tail.previous = self.head
+
+    def items_most_recent_first(self):
+        """Return cached (key, value) pairs, newest first."""
+        items = []
+        node = self.head.next
+
+        while node is not self.tail:
+            items.append((node.key, node.value))
+            node = node.next
+
+        return items
+

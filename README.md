@@ -1,111 +1,257 @@
 # MetroNav
 
-MetroNav is a Python command-line application for navigating a metro network. It uses graph algorithms and custom data structures to find routes, suggest stations, calculate journey details, and estimate fares.
-
-## Features
-
-- **Station suggestions:** Search for station names using prefix matching with a Trie.
-- **Fastest route:** Find a route that minimizes travel time, including interchange penalties.
-- **Fewest interchanges:** Find routes prioritizing fewer line changes.
-- **Cheapest route:** Find routes prioritizing the calculated fare.
-- **Journey information:** Display route details, travel time, and distance.
-- **Fare calculation:** Calculate fares using configurable fare slabs.
-- **LRU caching:** Reuse previously calculated results to reduce repeated work.
-- **Custom minimum heap:** Process route states by priority.
-- **JSON data:** Load the metro network and fare configuration from files.
-
-## Project Structure
-
-```text
-MetroNav/
-├── main.py
-├── graph.py
-├── routing.py
-├── min_heap.py
-├── trie.py
-├── cache.py
-├── fares.py
-├── data/
-│   ├── network.json
-│   └── fares.json
-├── tests/
-├── DESIGN.md
-└── README.md
-```
+MetroNav is a Python command-line application for exploring a metro network. It supports station autocomplete, route planning, fare estimation, network analysis, track closures, network expansion, busiest-station analysis, and ticket-queue processing.
 
 ## Requirements
 
-- Python 3
-- `pytest` for running the automated tests
+- Python 3.12 or a compatible Python 3 version
+- `pytest` to run the automated tests
+
+The application uses Python's standard library and custom implementations of the required data structures and algorithms.
 
 ## Setup
 
-1. Clone or download the project.
-2. Open the project folder in PyCharm or a terminal.
-3. Open a terminal in the project directory.
-4. Install the test dependency if needed:
+Open a terminal in the project directory.
 
-```bash
+Create a virtual environment if one does not already exist:
+
+```powershell
+python -m venv .venv
+```
+
+Activate it in Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Install pytest if needed:
+
+```powershell
 python -m pip install pytest
 ```
 
-## Usage
+Run the automated test suite:
 
-Run the following commands from the project directory:
-
-### Display network information
-
-```bash
-python metronav.py info
+```powershell
+python -m pytest -v
 ```
 
-### Suggest stations
+## Running MetroNav
 
-```bash
+Run commands from the directory containing `metronav.py`:
+
+```powershell
+python metronav.py --help
+```
+
+The help output lists the supported commands and arguments.
+
+### Station autocomplete
+
+Search for stations whose names begin with a prefix:
+
+```powershell
 python metronav.py suggest Ame
 ```
 
-### Find the fastest route
+Example output:
 
-```bash
+```text
+Station suggestions:
+- Ameerpet
+```
+
+The actual suggestions depend on the supplied network data.
+
+### Route planning
+
+Find the fastest route:
+
+```powershell
 python metronav.py route Ameerpet Moosapet --mode fastest
 ```
 
-### Find a route with fewer interchanges
+Find a route with the fewest interchanges:
 
-```bash
+```powershell
 python metronav.py route Ameerpet "SR Nagar" --mode fewest-interchanges
 ```
 
-### Find the cheapest route
+Find the cheapest route:
 
-```bash
+```powershell
 python metronav.py route Miyapur Nagole --mode cheapest
 ```
 
-Station names containing spaces should be enclosed in quotation marks.
+Example output:
 
-## Running Tests
-
-Run the automated test suite from the project directory:
-
-```bash
-python -m pytest -q
+```text
+Route: Ameerpet -> Madhura Nagar -> Yusufguda -> ...
+Mode: fastest
+Journey details:
+[Blue] Ameerpet -> Madhura Nagar -> Yusufguda
+Change at Yusufguda: Blue -> Yellow (+4 min)
+...
+Stops: 9
+Interchanges: 2
+Time: 39 min
+Distance: 17.2 km
+Fare: Rs 70
 ```
 
-Pytest reports the number of tests that pass or fail. Run the suite again after making changes to the application.
+The route output shows the station sequence, line changes, stops, journey time, distance, and estimated fare. The example is illustrative; actual results depend on the current network state and data.
 
-## Data Files
+Station names containing spaces should be enclosed in quotation marks.
 
-- `data/network.json` contains the metro stations and connections, including line, travel-time, and distance information.
-- `data/fares.json` contains the fare configuration used by the fare calculator.
+### Reachability within a time limit
 
-## Design and Algorithms
+List stations reachable from a starting station within a specified number of minutes:
 
-The project uses a weighted graph for the metro network, a Trie for station-prefix searches, a custom minimum heap for priority-based processing, and a dictionary with a doubly linked list for LRU caching.
+```powershell
+python metronav.py reach "Ameerpet" --minutes 20
+```
 
-See [DESIGN.md](DESIGN.md) for the architecture, algorithm descriptions, complexity analysis, and remaining assessment requirements.
+Example output:
 
-## AI Assistance Disclosure
+```text
+Stations reachable from Ameerpet within 20 minutes:
+- Ameerpet: 0 minutes
+- SR Nagar: 2 minutes
+- Punjagutta: 3 minutes
+...
+```
 
-AI tools were used as a support resource to clarify concepts, troubleshoot errors, review code, and improve documentation. AI-generated suggestions were reviewed and adapted during development. The developer is responsible for understanding, testing, and verifying the submitted implementation.
+The actual stations and times depend on the network and any active closures.
+
+## Station and Track Closures
+
+MetroNav supports closing and reopening stations and track segments. Closures affect subsequent route searches.
+
+Close a station:
+
+```powershell
+python metronav.py close "SR Nagar"
+```
+
+Reopen a station:
+
+```powershell
+python metronav.py open "SR Nagar"
+```
+
+Close a track segment:
+
+```powershell
+python metronav.py close-segment "Ameerpet" "SR Nagar"
+```
+
+Reopen a track segment:
+
+```powershell
+python metronav.py reopen-segment "Ameerpet" "SR Nagar"
+```
+
+After closing a segment, try routing between its endpoints. The router should avoid that segment if another valid route exists, or report that no route is available.
+
+### How closure state is stored
+
+MetroNav saves closure state to a local state file so that station and segment closures persist across separate CLI invocations. This allows a closure made in one command to affect a later route command.
+
+The state file is generated by the application; it is not one of the provided source data files. Do not edit the provided files in `data/` to simulate closures. Use the CLI commands instead.
+
+If you need to confirm the exact state-file name or location, check `metronav.py` for the `STATE_FILE` definition. The saved state should be updated by closure commands and loaded when the application starts.
+
+## Network Analysis
+
+Find connected zones:
+
+```powershell
+python metronav.py zones
+```
+
+Identify critical stations whose removal can disconnect the network:
+
+```powershell
+python metronav.py critical
+```
+
+Plan a low-cost network expansion using candidate tracks:
+
+```powershell
+python metronav.py expand
+```
+
+## Busiest Stations and Ticket Queue
+
+Show the top five busiest stations:
+
+```powershell
+python metronav.py top --k 5
+```
+
+Show the first 20 ticket requests in service order:
+
+```powershell
+python metronav.py queue --n 20
+```
+
+Peak-period requests are prioritised, with FIFO order maintained within each priority group.
+
+## Recent Routes and Network Information
+
+Display network information:
+
+```powershell
+python metronav.py info
+```
+
+View recent routes:
+
+```powershell
+python metronav.py recent
+```
+
+## Project Data
+
+The `data/` directory contains the provided input files, including:
+
+- `network.json` — stations and metro connections.
+- `fares.json` — fare slabs and currency.
+- `candidate_tracks.json` — candidate connections for network expansion.
+- `journeys.txt` — journey records used for busiest-station analysis.
+- `DATA_README.md` — information about the supplied data.
+
+These provided files should remain unchanged.
+
+## Testing
+
+Run the full automated test suite with:
+
+```powershell
+python -m pytest -v
+```
+
+The latest test result reported during development was **79 passed**. Rerun the tests before submission and update this number if the result changes.
+
+## Implementation Overview
+
+MetroNav uses:
+
+- An adjacency-list graph for the metro network.
+- A Trie for station autocomplete.
+- A custom binary min-heap for priority-based searches.
+- A dictionary and doubly linked list for the LRU cache.
+- Dijkstra-style search for fastest routing and reachability.
+- Priority-based search for fewest-interchanges routing.
+- Distance-based fare comparison for cheapest routing.
+- Union-Find for connected components and Kruskal's algorithm for network expansion.
+- Iterative Tarjan DFS for critical-station detection.
+- A size-K min-heap for busiest-station ranking.
+- A custom FIFO queue implementation for ticket requests.
+
+See `DESIGN.md` for design decisions, complexity analysis, limitations, and AI assistance disclosure.
+
+## Limitations
+
+MetroNav uses the supplied network and fare data. It does not provide live train locations, real-time delays, or service updates. Route and fare results depend on the accuracy of the provided data and the current closure state.

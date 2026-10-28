@@ -40,3 +40,19 @@ def test_negative_distance_raises_value_error():
         pass
     else:
         assert False, "Negative distance should raise ValueError"
+
+
+def test_fare_at_slab_boundaries():
+    from pathlib import Path
+    from fares import FareCalculator
+
+    project_root = Path(__file__).resolve().parent.parent
+    fare_file = project_root / "data" / "fares.json"
+    calculator = FareCalculator.from_json(fare_file)
+
+    assert calculator.calculate_fare(2) == 10
+    assert calculator.calculate_fare(2.01) == 20
+    assert calculator.calculate_fare(4) == 20
+    assert calculator.calculate_fare(4.01) == 30
+    assert calculator.calculate_fare(45) == 120
+    assert calculator.calculate_fare(45.01) == 130
