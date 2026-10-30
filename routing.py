@@ -39,31 +39,59 @@ class Router:
         if origin_id in self.graph.closed_stations:
             return {}
 
-        best_time = {origin_id: 0}
+        # Track the best time for each (station, current line) state.
+        start = (origin_id, None)
+        best_time = {start: 0}
+
         heap = MinHeap()
-        heap.push((0, origin_id))
+        heap.push((0, origin_id, ""))
 
         while not heap.is_empty():
-            minutes, station_id = heap.pop()
+            minutes, station_id, line_key = heap.pop()
+            current_line = line_key or None
+            state = (station_id, current_line)
 
-            if minutes != best_time.get(station_id):
+            if minutes != best_time.get(state):
                 continue
 
             for edge in self.get_neighbors(station_id):
                 next_station = edge["destination"]
+                next_line = edge["line"]
+
+                changed_line = (
+                        current_line is not None
+                        and current_line != next_line
+                )
+
                 new_minutes = minutes + edge["minutes"]
+
+                if changed_line:
+                    new_minutes += self.graph.interchange_penalty
 
                 if new_minutes > time_limit:
                     continue
 
-                if new_minutes < best_time.get(next_station, math.inf):
-                    best_time[next_station] = new_minutes
-                    heap.push((new_minutes, next_station))
+                next_state = (next_station, next_line)
 
-        return {
-            self.graph.stations[station_id]: minutes
-            for station_id, minutes in best_time.items()
-        }
+                if new_minutes < best_time.get(next_state, math.inf):
+                    best_time[next_state] = new_minutes
+                    heap.push((new_minutes, next_station, next_line))
+
+        # A station may be reachable using multiple lines.
+        # Report its minimum reachable time.
+        station_times = {}
+
+        for (station_id, line), minutes in best_time.items():
+            name = self.graph.stations[station_id]
+
+            if name not in station_times:
+                station_times[name] = minutes
+            else:
+                station_times[name] = min(
+                    station_times[name], minutes
+                )
+
+        return station_times
 
     def close_station(self, station_name):
         self.graph.close_station(station_name)

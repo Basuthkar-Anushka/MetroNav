@@ -103,6 +103,15 @@ def test_stations_within_time_includes_origin():
     assert all(minutes <= 15 for minutes in result.values())
 
 
+def test_stations_within_time_counts_interchange_penalty():
+    _, router = build_router()
+
+    result = router.stations_within_time("Miyapur", 28)
+
+    assert result["Ameerpet"] == 26
+    assert "Nagole" not in result
+
+
 def test_stations_beyond_time_limit_are_excluded():
     _, router = build_router()
 
@@ -189,7 +198,3 @@ def test_closing_segment_with_unknown_station_raises_error():
 
     with pytest.raises(ValueError, match="Unknown station"):
         router.close_segment("Ameerpet", "NotARealStation")
-        
-
-
-

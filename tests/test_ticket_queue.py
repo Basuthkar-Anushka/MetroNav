@@ -2,6 +2,8 @@
 import pytest
 
 from ticket_queue import TicketQueue
+from metronav import load_ticket_queue
+from graph import Graph
 
 
 def test_peak_requests_are_served_first():
@@ -49,3 +51,67 @@ def test_empty_queue_raises_error():
 
     with pytest.raises(IndexError):
         queue.dequeue()
+
+
+def test_loader_skips_unknown_origin(tmp_path):
+    network_file = tmp_path / "network.json"
+    journeys_file = tmp_path / "journeys.txt"
+
+    network_file.write_text(
+        '''
+        {
+            "interchange_penalty_minutes": 4,
+            "stations": [
+                {"id": "A", "name": "Ameerpet"},
+                {"id": "B", "name": "Begumpet"}
+            ],
+            "connections": []
+        }
+        ''',
+        encoding="utf-8"
+    )
+
+    journeys_file.write_text(
+        "timestamp,origin,destination,peak\n"
+        "08:00,UnknownStation,Begumpet,1\n"
+        "08:05,Ameerpet,Begumpet,0\n",
+        encoding="utf-8"
+    )
+
+    graph = Graph.from_json(network_file)
+    queue = load_ticket_queue(journeys_file, graph)
+
+    assert len(queue) == 1
+    assert queue.first_n(1)[0]["origin"] == "Ameerpet"
+
+
+def test_loader_skips_unknown_destination(tmp_path):
+    network_file = tmp_path / "network.json"
+    journeys_file = tmp_path / "journeys.txt"
+
+    network_file.write_text(
+        '''
+        {
+            "interchange_penalty_minutes": 4,
+            "stations": [
+                {"id": "A", "name": "Ameerpet"},
+                {"id": "B", "name": "Begumpet"}
+            ],
+            "connections": []
+        }
+        ''',
+        encoding="utf-8"
+    )
+
+    journeys_file.write_text(
+        "timestamp,origin,destination,peak\n"
+        "08:00,Ameerpet,UnknownStation,1\n"
+        "08:05,Ameerpet,Begumpet,0\n",
+        encoding="utf-8"
+    )
+
+    graph = Graph.from_json(network_file)
+    queue = load_ticket_queue(journeys_file, graph)
+
+    assert len(queue) == 1
+    assert queue.first_n(1)[0]["destination"] == "Begumpet"

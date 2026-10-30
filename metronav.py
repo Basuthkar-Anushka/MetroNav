@@ -113,7 +113,7 @@ def save_network_state(graph):
         json.dump(state, file, indent=2)
 
 
-def load_ticket_queue(journeys_file):
+def load_ticket_queue(journeys_file, graph):
     """Load journey requests in file order into the priority queue."""
     queue = TicketQueue()
 
@@ -134,6 +134,11 @@ def load_ticket_queue(journeys_file):
             peak_text = (row.get("peak") or "").strip()
 
             if not origin or not destination or not timestamp:
+                continue
+            if graph.find_station(origin) is None:
+                continue
+
+            if graph.find_station(destination) is None:
                 continue
 
             if peak_text not in {"0", "1"}:
@@ -454,7 +459,7 @@ def main():
                 raise ValueError("N cannot be negative")
 
             journeys_file = DATA_FOLDER / "journeys.txt"
-            ticket_queue = load_ticket_queue(journeys_file)
+            ticket_queue = load_ticket_queue(journeys_file,graph)
             requests = ticket_queue.first_n(args.n)
 
             if not requests:

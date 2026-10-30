@@ -141,7 +141,7 @@ class Graph:
         ]
 
         # Station ID -> station name.
-        self.stations = {}
+        self.stations: dict[str, str] = {}
 
         # Normalized station name -> station ID.
         self.name_to_id = {}

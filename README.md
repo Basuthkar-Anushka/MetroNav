@@ -122,8 +122,7 @@ Stations reachable from Ameerpet within 20 minutes:
 ...
 ```
 
-The actual stations and times depend on the network and any active closures.
-
+The search includes interchange penalties when changing metro lines. The actual stations and times depend on the network and any active closures.
 ## Station and Track Closures
 
 MetroNav supports closing and reopening stations and track segments. Closures affect subsequent route searches.
@@ -189,15 +188,15 @@ Show the top five busiest stations:
 ```powershell
 python metronav.py top --k 5
 ```
+The command ranks stations by total recorded visits, with alphabetical ordering used to break ties.
 
-Show the first 20 ticket requests in service order:
+Shows the first 20 ticket requests in service order:
 
 ```powershell
 python metronav.py queue --n 20
 ```
 
-Peak-period requests are prioritised, with FIFO order maintained within each priority group.
-
+Peak-period requests are prioritised, with FIFO order maintained within each priority group. Requests containing unknown origin or destination stations are skipped.
 ## Recent Routes and Network Information
 
 Display network information:
@@ -232,8 +231,7 @@ Run the full automated test suite with:
 python -m pytest -v
 ```
 
-The latest test result reported during development was **79 passed**. Rerun the tests before submission and update this number if the result changes.
-
+The latest test result reported during development was **86 passed**. Rerun the tests before submission and update this number if the result changes.
 ## Implementation Overview
 
 MetroNav uses:

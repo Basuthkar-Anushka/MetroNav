@@ -8,6 +8,8 @@ A **Trie** supports case-insensitive station autocomplete without scanning every
 
 The custom **binary min-heap** supports priority-based processing in routing and other ranking operations. `push` and `pop` take O(log N) time; inspecting the heap takes O(1). Heap storage is O(N).
 
+For busiest-station ranking, a size-K min-heap retains the stations with the highest visit counts, using alphabetical order to break ties.
+
 The **LRU cache** combines a dictionary with a doubly linked list, allowing average O(1) `get` and `put` operations. It stores up to 10 route results keyed by origin, destination, and routing mode. Network changes clear the cache to prevent stale results.
 
 **Union-Find**, with path compression and union by rank, supports connected-component analysis and Kruskal's minimum-cost network expansion. Its operations take O(α(V)) amortized time, where α is the inverse Ackermann function.
@@ -22,6 +24,7 @@ The **LRU cache** combines a dictionary with a doubly linked list, allowing aver
 
 For routing, let V′ and E′ represent the vertices and transitions in the expanded graph of station-and-line states. Heap-based Dijkstra-style routing typically takes O((V′ + E′) log V′) time and O(V′ + E′) space. Fewest-interchanges routing has a similar bound when implemented with a priority queue over expanded states. Cheapest routing may retain multiple non-dominated distance/time labels; its worst-case time and space can be larger because the number of labels is not necessarily bounded by one per station.
 
+Reachability analysis uses station-and-line states so that interchange penalties are included when calculating the minimum travel time to each reachable station.
 ## 3. Limitations and Possible Improvements
 
 The application relies on the supplied network, fare slabs, and journey records; it does not incorporate live delays or service updates. Cheapest-route search can retain multiple candidate labels, increasing resource use on larger networks. Trie suggestions require sorting when results are returned. Error handling and algorithm correctness should continue to be tested against malformed data, closures, disconnected networks, and unusual inputs.
@@ -30,6 +33,6 @@ With more time, I would add broader randomized and edge-case tests, benchmark la
 
 ## 4. Testing and AI Assistance Disclosure
 
-The latest test result reported during development was **79 passing tests**. Manual checks also confirmed time-limited reachability, persistent station closures, and avoidance of a closed segment when an alternative route exists.&#x20;
+The latest test result reported during development was **87 passing tests**. Manual checks also confirmed time-limited reachability, persistent station closures, and avoidance of a closed segment when an alternative route exists.&#x20;
 
 ChatGPT was used to explain algorithms, suggest tests, help troubleshoot errors, and review documentation. I tested suggested changes, adapted code to the project, and corrected issues identified during development, including CLI command usage and tests for cheapest-route tie-breaking and fewest-interchange behavior. I remain responsible for verifying the final implementation and understanding the submitted code.

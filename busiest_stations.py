@@ -70,16 +70,17 @@ def find_busiest_stations(journeys_file, k, valid_stations=None):
     heap = MinHeap()
 
     for station, count in visits.items():
-        # Higher counts are better; for ties, earlier names are better.
-        heap.push((-count, _reverse_name(station), station))
+        # Keep the K busiest stations.
+        # For equal counts, prefer alphabetical order.
+        heap.push((count, _reverse_name(station), station))
 
         if len(heap.items) > k:
             heap.pop()
 
     busiest = []
     while not heap.is_empty():
-        negative_count, _, station = heap.pop()
-        busiest.append((station, -negative_count))
+        count, _, station = heap.pop()
+        busiest.append((station, count))
 
     busiest.sort(key=lambda item: (-item[1], item[0].casefold()))
 

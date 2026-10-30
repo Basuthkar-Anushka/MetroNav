@@ -1,4 +1,6 @@
 import json
+from decimal import Decimal, InvalidOperation
+
 
 class FareCalculator:
     def __init__(self, fare_data):
@@ -12,12 +14,22 @@ class FareCalculator:
 
         return cls(fare_data)
 
+    from decimal import Decimal, InvalidOperation
+
     def calculate_fare(self, distance_km):
-        if distance_km < 0:
+        try:
+            distance = Decimal(str(distance_km))
+        except (InvalidOperation, ValueError):
+            raise ValueError("Invalid distance")
+
+        if not distance.is_finite():
+            raise ValueError("Distance must be finite")
+
+        if distance < 0:
             raise ValueError("Distance cannot be negative")
 
         for slab in self.fare_slabs:
-            if distance_km <= slab["max_km"]:
+            if distance <= Decimal(str(slab["max_km"])):
                 return slab["fare"]
 
         return None
